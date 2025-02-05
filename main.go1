@@ -1,0 +1,35 @@
+package main
+
+import (
+	"log"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"strings"
+)
+
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// 获取请求的 User-Agent
+		ua := r.UserAgent()
+
+		var targetURL *url.URL
+
+		// 判断 User-Agent 是否包含 DingTalk
+		if strings.Contains(ua, "DingTalk") {
+			targetURL, _ = url.Parse("http://127.0.0.1:31992")
+		} else {
+			targetURL, _ = url.Parse("http://127.0.0.1:31994")
+		}
+
+		// 创建反向代理
+		proxy := httputil.NewSingleHostReverseProxy(targetURL)
+
+		// 代理请求
+		proxy.ServeHTTP(w, r)
+	})
+
+	// 启动服务器
+	log.Println("Starting PM ReverseProxy on :31996")
+	log.Fatal(http.ListenAndServe(":31996", nil))
+}
